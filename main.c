@@ -18,7 +18,7 @@ void searchSignature(const char *filename, const char *signature, int signatureL
     fseek(file, 0, SEEK_SET);
 
     // Read the entire file into a buffer
-    char *buffer = (char *)malloc(fileSize);
+    char *buffer = (char *)malloc(fileSize + 1); // Allocate fileSize + 1 for null terminator
     if (buffer == NULL) {
         fclose(file);
         perror("Memory allocation error");
@@ -27,8 +27,9 @@ void searchSignature(const char *filename, const char *signature, int signatureL
 
     fread(buffer, sizeof(char), fileSize, file);
     fclose(file);
+    buffer[fileSize] = '\0'; // Null terminator
 
-    // Search for the signature in the hexadecimal representation
+    // Allocate memory for hexadecimal representation (twice the file size)
     char *hexBuffer = (char *)malloc(2 * fileSize + 1); // Each byte represented by 2 characters, plus null terminator
     if (hexBuffer == NULL) {
         free(buffer);
@@ -38,7 +39,7 @@ void searchSignature(const char *filename, const char *signature, int signatureL
 
     // Convert binary buffer to hexadecimal representation
     for (int i = 0; i < fileSize; i++) {
-        sprintf(hexBuffer + 2 * i, "%02X", buffer[i]);
+        sprintf(hexBuffer + 2 * i, "%02X", (unsigned char)buffer[i]); // Ensure correct interpretation of bytes
     }
     hexBuffer[2 * fileSize] = '\0'; // Null terminator
 
@@ -46,7 +47,6 @@ void searchSignature(const char *filename, const char *signature, int signatureL
     char *pos = strstr(hexBuffer, signature);
     if (pos != NULL) {
         printf("Signature found in file: %s\n", filename);
-        printf("Offset in hexadecimal: %s\n", pos - hexBuffer);
     } else {
         printf("Signature not found in file: %s\n", filename);
     }
@@ -58,27 +58,17 @@ void searchSignature(const char *filename, const char *signature, int signatureL
 
 int main() {
     char filename[100];
-    char signature[MAX_SIGNATURE_LENGTH * 3]; // Allow for spaces between bytes
+    char signature[MAX_SIGNATURE_LENGTH * 2]; // Each byte represented by 2 characters
 
     // Input filename and signature from the user
     printf("Enter filename: ");
     scanf(" %[^\n]%*c", filename); // Read the entire line including spaces
 
-    printf("Enter signature (up to 8 bytes in hexadecimal, separated by spaces): ");
-    scanf(" %[^\n]%*c", signature); // Read the entire line including spaces
-
-    // Remove any spaces from the signature
-    char *ptr = signature;
-    while (*ptr) {
-        if (*ptr == ' ') {
-            strcpy(ptr, ptr + 1);
-        } else {
-            ptr++;
-        }
-    }
+    printf("Enter signature (up to 8 bytes in hexadecimal, without spaces): ");
+    scanf("%s", signature); // Read signature without spaces
 
     // Calculate signature length
-    int signatureLength = strlen(signature) / 2; // Each byte represented by 2 characters
+    int signatureLength = strlen(signature);
 
     // Search for the signature in the file
     searchSignature(filename, signature, signatureLength);
