@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #define MAX_SIGNATURE_LENGTH 8
 
@@ -43,8 +44,22 @@ void searchSignature(const char *filename, const char *signature, int signatureL
     }
     hexBuffer[2 * fileSize] = '\0'; // Null terminator
 
+    // Make a copy of the signature to modify
+    char *signatureCopy = strdup(signature);
+    if (signatureCopy == NULL) {
+        perror("Memory allocation error");
+        free(buffer);
+        free(hexBuffer);
+        return;
+    }
+
+    // Convert input signature copy to uppercase
+    for (int i = 0; i < signatureLength; i++) {
+        signatureCopy[i] = toupper(signatureCopy[i]);
+    }
+
     // Search for the signature in the hexadecimal buffer
-    char *pos = strstr(hexBuffer, signature);
+    char *pos = strstr(hexBuffer, signatureCopy);
     if (pos != NULL) {
         printf("Signature found in file: %s\n", filename);
     } else {
@@ -54,6 +69,7 @@ void searchSignature(const char *filename, const char *signature, int signatureL
     // Free allocated memory
     free(buffer);
     free(hexBuffer);
+    free(signatureCopy);
 }
 
 int main() {
@@ -65,7 +81,7 @@ int main() {
     scanf(" %[^\n]%*c", filename); // Read the entire line including spaces
 
     printf("Enter signature (up to 8 bytes in hexadecimal, without spaces): ");
-    scanf("%s", signature); // Read signature without spaces
+    scanf(" %[^\n]%*c", signature); // Read signature without spaces
 
     // Calculate signature length
     int signatureLength = strlen(signature);
