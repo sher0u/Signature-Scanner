@@ -4,7 +4,7 @@
 #include <ctype.h>
 
 #define MAX_SIGNATURE_LENGTH 8
-//C:\Windows\notepad.exe
+
 // Function to search for a signature in a file
 void searchSignature(const char *filename, const char *signature, int signatureLength) {
     FILE *file = fopen(filename, "rb");
@@ -50,7 +50,7 @@ void searchSignature(const char *filename, const char *signature, int signatureL
     }
     hexBuffer[2 * fileSize] = '\0';
 
-    // Make a copy of the signature to modify
+    // Convert input signature to uppercase
     char *signatureCopy = strdup(signature);
     if (signatureCopy == NULL) {
         perror("Memory allocation error");
@@ -59,7 +59,6 @@ void searchSignature(const char *filename, const char *signature, int signatureL
         return;
     }
 
-    // Convert input signature copy to uppercase
     for (int i = 0; i < signatureLength; i++) {
         signatureCopy[i] = toupper(signatureCopy[i]);
     }
@@ -80,26 +79,17 @@ void searchSignature(const char *filename, const char *signature, int signatureL
 
 int main() {
     char filename[100];
-    char signature[MAX_SIGNATURE_LENGTH * 2 + 1];
+    const char *signature = "70726F67"; // Signature to always check for
 
-    // Input filename and signature from the user
+    // Input filename from the user
     printf("Enter filename: ");
     if (scanf("%99s", filename) != 1) {
         printf("Invalid filename\n");
         return 1;
     }
 
-    printf("Enter signature (up to 8 bytes in hexadecimal, without spaces): ");
-    if (scanf("%16s", signature) != 1) {
-        printf("Invalid signature\n");
-        return 1;
-    }
-
-    // Calculate signature length
-    int signatureLength = strlen(signature);
-
     // Search for the signature in the file
-    searchSignature(filename, signature, signatureLength);
+    searchSignature(filename, signature, strlen(signature));
 
     return 0;
 }
