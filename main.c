@@ -4,7 +4,7 @@
 #include <ctype.h>
 
 #define MAX_SIGNATURE_LENGTH 8
-
+//C:\Windows\notepad.exe
 // Function to search for a signature in a file
 void searchSignature(const char *filename, const char *signature, int signatureLength) {
     FILE *file = fopen(filename, "rb");
@@ -19,7 +19,7 @@ void searchSignature(const char *filename, const char *signature, int signatureL
     fseek(file, 0, SEEK_SET);
 
     // Read the entire file into a buffer
-    char *buffer = (char *)malloc(fileSize); // Allocate fileSize bytes
+    unsigned char *buffer = (unsigned char *)malloc(fileSize);
     if (buffer == NULL) {
         fclose(file);
         perror("Memory allocation error");
@@ -29,8 +29,15 @@ void searchSignature(const char *filename, const char *signature, int signatureL
     fread(buffer, 1, fileSize, file);
     fclose(file);
 
+    // Check for MZ header in the first two bytes of the file
+    if (buffer[0] == 0x4D && buffer[1] == 0x5A) {
+        printf("The file has an MZ header, indicating a PE format executable.\n");
+    } else {
+        printf("The file does not have an MZ header, possibly not a Windows executable.\n");
+    }
+
     // Allocate memory for hexadecimal representation (twice the file size + 1 for null terminator)
-    char *hexBuffer = (char *)malloc(2 * fileSize + 1); // Each byte represented by 2 characters, plus null terminator
+    char *hexBuffer = (char *)malloc(2 * fileSize + 1);
     if (hexBuffer == NULL) {
         free(buffer);
         perror("Memory allocation error");
@@ -39,9 +46,9 @@ void searchSignature(const char *filename, const char *signature, int signatureL
 
     // Convert binary buffer to hexadecimal representation
     for (int i = 0; i < fileSize; i++) {
-        sprintf(hexBuffer + 2 * i, "%02X", (unsigned char)buffer[i]); // Ensure correct interpretation of bytes
+        sprintf(hexBuffer + 2 * i, "%02X", buffer[i]);
     }
-    hexBuffer[2 * fileSize] = '\0'; // Null terminator
+    hexBuffer[2 * fileSize] = '\0';
 
     // Make a copy of the signature to modify
     char *signatureCopy = strdup(signature);
@@ -73,7 +80,7 @@ void searchSignature(const char *filename, const char *signature, int signatureL
 
 int main() {
     char filename[100];
-    char signature[MAX_SIGNATURE_LENGTH * 2 + 1]; // Each byte represented by 2 characters, plus null terminator
+    char signature[MAX_SIGNATURE_LENGTH * 2 + 1];
 
     // Input filename and signature from the user
     printf("Enter filename: ");
