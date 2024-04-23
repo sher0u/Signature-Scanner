@@ -78,18 +78,44 @@ void searchSignature(const char *filename, const char *signature, int signatureL
 }
 
 int main() {
-    char filename[100];
-    const char *signature = "70726F67"; // Signature to always check for
+    FILE *file;
+    char signature[MAX_SIGNATURE_LENGTH + 1]; // +1 for null terminator
+    size_t bytes_read;
+    char filepath[100]; // Assuming the maximum length of the file path is 100 characters
+    char filepathToScan[100];
 
-    // Input filename from the user
-    printf("Enter filename: ");
-    if (scanf("%99s", filename) != 1) {
-        printf("Invalid filename\n");
+    // Prompt the user to input the file path
+    printf("Please enter the path of the file containing the hexadecimal signature: ");
+    fgets(filepath, sizeof(filepath), stdin);
+    filepath[strcspn(filepath, "\n")] = 0; // Remove trailing newline
+
+    printf("Please enter the path of the Program: ");
+    fgets(filepathToScan, sizeof(filepathToScan), stdin);
+    filepathToScan[strcspn(filepathToScan, "\n")] = 0; // Remove trailing newline
+
+    // Open the file in binary mode
+    file = fopen(filepath, "rb");
+    if (file == NULL) {
+        printf("Error: Unable to open file at path '%s'\n", filepath);
         return 1;
     }
 
-    // Search for the signature in the file
-    searchSignature(filename, signature, strlen(signature));
+    // Read the signature from the file
+    bytes_read = fread(signature, 1, MAX_SIGNATURE_LENGTH, file);
+    if (bytes_read == 0) {
+        printf("Error: Unable to read signature from file\n");
+        fclose(file);
+        return 1;
+    }
+    signature[bytes_read] = '\0'; // Null-terminate the signature
+
+    // Close the file
+    fclose(file);
+
+    // Print the signature as it is
+    printf("Signature read from file:\n%s\n", signature);
+
+    searchSignature(filepathToScan, signature, strlen(signature));
 
     return 0;
 }
