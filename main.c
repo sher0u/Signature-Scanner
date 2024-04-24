@@ -5,6 +5,48 @@
 
 #define MAX_SIGNATURE_LENGTH 8
 
+long findOffset(const char *filename, const char *pattern) {
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL) {
+        perror("Error opening file");
+        return -1;
+    }
+
+    // Allocate buffer to read file contents
+    const size_t bufferSize = 1024; // Adjust buffer size as needed
+    char buffer[bufferSize];
+
+    // Read file contents into buffer
+    size_t bytesRead = fread(buffer, 1, bufferSize, file);
+    if (bytesRead == 0) {
+        fclose(file);
+        perror("Error reading file");
+        return -1;
+    }
+
+    size_t patternSize = strlen(pattern);
+    long offset = -1; // Initialize offset to indicate pattern not found
+
+    // Loop through each byte in the buffer
+    for (size_t i = 0; i <= bytesRead - patternSize; ++i) {
+        int matchFound = 1;
+        // Compare each byte in the buffer with the pattern
+        for (size_t j = 0; j < patternSize; ++j) {
+            if (buffer[i + j] != pattern[j]) {
+                matchFound = 0;
+                break;
+            }
+        }
+        if (matchFound) {
+            offset = i; // Pattern found, set offset
+            break;
+        }
+    }
+
+    fclose(file); // Close the file
+    return offset;
+}
+
 // Function to search for a signature in a file
 void searchSignature(const char *filename, const char *signature, int signatureLength) {
     FILE *file = fopen(filename, "rb");
@@ -17,6 +59,13 @@ void searchSignature(const char *filename, const char *signature, int signatureL
     fseek(file, 0, SEEK_END);
     long fileSize = ftell(file);
     fseek(file, 0, SEEK_SET);
+
+    // Check if the file size is smaller than the required size for signature check
+    if (fileSize < signatureLength) {
+        printf("Error: File size is smaller than signature length + offset\n");
+        fclose(file);
+        return;
+    }
 
     // Read the entire file into a buffer
     unsigned char *buffer = (unsigned char *)malloc(fileSize);
@@ -77,6 +126,53 @@ void searchSignature(const char *filename, const char *signature, int signatureL
     free(signatureCopy);
 }
 
+long getFileSize(const char *filename) {
+    FILE *file;
+    long size;
+
+    // Open the file in binary mode
+    file = fopen(filename, "rb");
+
+    // Check if file opened successfully
+    if (file == NULL) {
+        printf("Error opening file.\n");
+        return -1; // Return -1 to indicate error
+    }
+
+    // Move file pointer to the end of the file
+    fseek(file, 0, SEEK_END);
+
+    // Get the current position of the file pointer
+    size = ftell(file);
+
+    // Close the file
+    fclose(file);
+
+    return size;
+}
+
+int checkFileSize(int fileSize, int offset, int signatureSize) {
+    if (fileSize < 0) {
+        printf("ERROR: Invalid file size\n");
+        return 1;
+    }
+    if (offset < 0) {
+        printf("ERROR: Invalid offset\n");
+        return 2;
+    }
+    if (signatureSize <= 0) {
+        printf("ERROR: Invalid signature size\n");
+        return 3;
+    }
+    if (fileSize < offset + signatureSize) {
+        printf("ERROR: File size too small for signature\n");
+        return 4;
+    }
+    return 0;
+}
+
+
+
 int main() {
     FILE *file;
     char signature[MAX_SIGNATURE_LENGTH + 1]; // +1 for null terminator
@@ -93,12 +189,15 @@ int main() {
     fgets(filepathToScan, sizeof(filepathToScan), stdin);
     filepathToScan[strcspn(filepathToScan, "\n")] = 0; // Remove trailing newline
 
+
     // Open the file in binary mode
     file = fopen(filepath, "rb");
     if (file == NULL) {
         printf("Error: Unable to open file at path '%s'\n", filepath);
         return 1;
     }
+
+
 
     // Read the signature from the file
     bytes_read = fread(signature, 1, MAX_SIGNATURE_LENGTH, file);
@@ -112,8 +211,35 @@ int main() {
     // Close the file
     fclose(file);
 
+    // Find the offset of the signature in the file
+    long offset;
+    offset = findOffset(filepathToScan, "C2FDEAA1");
+    if (offset != -1) {
+        printf("Offset of signature in the file: %ld\n", offset);
+    } else {
+        printf("Signature not found in the file.\n");
+    }
+
     // Print the signature as it is
-    printf("Signature read from file:\n%s\n", signature);
+    printf("\nSignature read from file: %s\n", signature);
+
+    // Get file size for the program file
+    file = fopen(filepathToScan, "rb");
+    if (file == NULL) {
+        printf("Error: Unable to open file at path '%s'\n", filepathToScan);
+        return 1;
+    }
+
+    fseek(file, 0, SEEK_END);
+    long programFileSize = ftell(file);
+    fclose(file);
+
+
+
+    // Print program file size
+    printf("Program file size: %ld bytes\n", programFileSize);
+    // Print signature size
+    printf("Signature size: %zu bytes\n", bytes_read);
 
     searchSignature(filepathToScan, signature, strlen(signature));
 
