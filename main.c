@@ -5,47 +5,7 @@
 
 #define MAX_SIGNATURE_LENGTH 8
 
-long findOffset(const char *filename, const char *pattern) {
-    FILE *file = fopen(filename, "rb");
-    if (file == NULL) {
-        perror("Error opening file");
-        return -1;
-    }
 
-    // Allocate buffer to read file contents
-    const size_t bufferSize = 1024; // Adjust buffer size as needed
-    char buffer[bufferSize];
-
-    // Read file contents into buffer
-    size_t bytesRead = fread(buffer, 1, bufferSize, file);
-    if (bytesRead == 0) {
-        fclose(file);
-        perror("Error reading file");
-        return -1;
-    }
-
-    size_t patternSize = strlen(pattern);
-    long offset = -1; // Initialize offset to indicate pattern not found
-
-    // Loop through each byte in the buffer
-    for (size_t i = 0; i <= bytesRead - patternSize; ++i) {
-        int matchFound = 1;
-        // Compare each byte in the buffer with the pattern
-        for (size_t j = 0; j < patternSize; ++j) {
-            if (buffer[i + j] != pattern[j]) {
-                matchFound = 0;
-                break;
-            }
-        }
-        if (matchFound) {
-            offset = i; // Pattern found, set offset
-            break;
-        }
-    }
-
-    fclose(file); // Close the file
-    return offset;
-}
 
 // Function to search for a signature in a file
 void searchSignature(const char *filename, const char *signature, int signatureLength) {
@@ -206,19 +166,11 @@ int main() {
         fclose(file);
         return 1;
     }
+    
     signature[bytes_read] = '\0'; // Null-terminate the signature
 
     // Close the file
     fclose(file);
-
-    // Find the offset of the signature in the file
-    long offset;
-    offset = findOffset(filepathToScan, "C2FDEAA1");
-    if (offset != -1) {
-        printf("Offset of signature in the file: %ld\n", offset);
-    } else {
-        printf("Signature not found in the file.\n");
-    }
 
     // Print the signature as it is
     printf("\nSignature read from file: %s\n", signature);
