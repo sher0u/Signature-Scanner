@@ -5,6 +5,45 @@
 
 #define MAX_SIGNATURE_LENGTH 8
 
+#define BUFFER_SIZE 1024
+
+// Function to find pattern in a file
+long findPatternInFile(const char *filename, const char *pattern) {
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL) {
+        fprintf(stderr, "Error: Unable to open file %s\n", filename);
+        return -1;
+    }
+
+    int patternLength = strlen(pattern) / 2; // Length of pattern in bytes
+
+    // Convert hexadecimal pattern string to bytes
+    char patternBytes[100];
+    for (int i = 0; i < patternLength; i++) {
+        sscanf(pattern + 2 * i, "%2hhx", &patternBytes[i]);
+    }
+
+    // Find the pattern
+    long offset = -1;
+    char buffer[BUFFER_SIZE];
+    long fileOffset = 0;
+    int bytesRead;
+
+    while ((bytesRead = fread(buffer, 1, BUFFER_SIZE, file)) > 0) {
+        for (int i = 0; i < bytesRead - patternLength + 1; i++) {
+            if (memcmp(buffer + i, patternBytes, patternLength) == 0) {
+                offset = fileOffset + i;
+                fclose(file);
+                return offset;
+            }
+        }
+        fileOffset += bytesRead;
+    }
+
+    fclose(file);
+    return offset; // Pattern not found
+}
+
 
 
 // Function to search for a signature in a file
@@ -139,6 +178,8 @@ int main() {
     size_t bytes_read;
     char filepath[100]; // Assuming the maximum length of the file path is 100 characters
     char filepathToScan[100];
+    const char *filename = filepathToScan ; // Path to the file
+    const char *pattern = signature;
 
     // Prompt the user to input the file path
     printf("Please enter the path of the file containing the hexadecimal signature: ");
@@ -166,7 +207,7 @@ int main() {
         fclose(file);
         return 1;
     }
-    
+
     signature[bytes_read] = '\0'; // Null-terminate the signature
 
     // Close the file
@@ -174,6 +215,16 @@ int main() {
 
     // Print the signature as it is
     printf("\nSignature read from file: %s\n", signature);
+
+
+    // Find the size of offset in the file
+    long offset = findPatternInFile(filename, pattern);
+
+    if (offset != -1) {
+        printf("\nPattern found at offset: %ld bytes\n", offset);
+    } else {
+        printf("Pattern not found in the file.\n");
+    }
 
     // Get file size for the program file
     file = fopen(filepathToScan, "rb");
@@ -193,6 +244,7 @@ int main() {
     // Print signature size
     printf("Signature size: %zu bytes\n", bytes_read);
 
+    checkFileSize(programFileSize,offset,bytes_read);
     searchSignature(filepathToScan, signature, strlen(signature));
 
     return 0;
