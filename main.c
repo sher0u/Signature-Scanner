@@ -5,10 +5,43 @@
 
 #define MAX_SIGNATURE_LENGTH 8
 #define MAX_LENGTH 100  // Maximum length of each line in the file
+// reading the signature from the exe
 
+void read_file_at_offset(const char* file_path, long offset) {
+    FILE* file = fopen(file_path, "rb");
+    if (file == NULL) {
+        printf("Unable to open file '%s'.\n", file_path);
+        return;
+    }
 
-//function to read the offset and the signature
+    // Seek to the specified offset
+    if (fseek(file, offset, SEEK_SET) != 0) {
+        printf("Error seeking to offset.\n");
+        fclose(file);
+        return;
+    }
 
+    // Read 4 bytes (32 bits) from the file
+    unsigned char data[4];
+    size_t bytes_read = fread(data, 1, sizeof(data), file);
+    if (bytes_read != sizeof(data)) {
+        printf("Error reading signature from file.\n");
+        fclose(file);
+        return;
+    }
+
+    // Print the signature
+    printf("Signature at offset 0x%lx: ", offset);
+    for (int i = 0; i < sizeof(data); ++i) {
+        printf("%02X ", data[i]);
+    }
+    printf("\n");
+
+    // Clean up
+    fclose(file);
+}
+
+//function to read the offset and the signature from the text file
 int read_signature_and_offset(const char *file_name, char *signature, char *offset) {
     FILE *file = fopen(file_name, "r");
     if (file == NULL) {
@@ -119,6 +152,7 @@ int main() {
     char filepath[100]; // Assuming the maximum length of the file path is 100 characters
     char filepathToScan[100];
     char offset[MAX_LENGTH];
+    char offsetFake[MAX_LENGTH];
 
     // Prompt the user to input the file path
     printf("Please enter the path of the file containing the hexadecimal signature: ");
@@ -139,10 +173,21 @@ int main() {
     // Read the signature and offset  from the file
     read_signature_and_offset(filepath,signature,offset);
 
+
     // Print the signature as it is
     printf("\nSignature read from file: %s\n", signature);
     // Print the signature as it is
     printf("Signature read from file: %s\n", offset);
+    //printf the offset from the exe file
+
+    // Prompt the user to input the offset to read from
+    long offsetValue;
+    printf("Please enter the offset (in hexadecimal) to read from: ");
+    scanf("%lx", &offsetValue);
+
+    // Read data from the file at the specified offset
+    read_file_at_offset(filepathToScan, offsetValue);
+
 
     searchSignature(filepathToScan, signature, strlen(signature));
 
