@@ -135,6 +135,8 @@ void searchSignature(const char *filename, const char *signature, int signatureL
     fread(buffer, 1, fileSize, file);
     fclose(file);
 
+
+
     // Check for MZ header in the first two bytes of the file
     if (buffer[0] == 0x4D && buffer[1] == 0x5A) {
         printf("The file has an MZ header, indicating a PE format executable.\n");
@@ -208,7 +210,6 @@ int main() {
     }
     // Read the signature and offset  from the file
     read_signature_and_offset(filepath,signature,offset,NameFile);
-
 
     // Print the signature as it is
     printf("\nSignature read from file: %s\n", signature);
