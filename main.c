@@ -5,47 +5,6 @@
 
 #define MAX_SIGNATURE_LENGTH 8
 
-#define BUFFER_SIZE 1024
-
-// Function to find pattern in a file
-long findPatternInFile(const char *filename, const char *pattern) {
-    FILE *file = fopen(filename, "rb");
-    if (file == NULL) {
-        fprintf(stderr, "Error: Unable to open file %s\n", filename);
-        return -1;
-    }
-
-    int patternLength = strlen(pattern) / 2; // Length of pattern in bytes
-
-    // Convert hexadecimal pattern string to bytes
-    char patternBytes[100];
-    for (int i = 0; i < patternLength; i++) {
-        sscanf(pattern + 2 * i, "%2hhx", &patternBytes[i]);
-    }
-
-    // Find the pattern
-    long offset = -1;
-    char buffer[BUFFER_SIZE];
-    long fileOffset = 0;
-    int bytesRead;
-
-    while ((bytesRead = fread(buffer, 1, BUFFER_SIZE, file)) > 0) {
-        for (int i = 0; i < bytesRead - patternLength + 1; i++) {
-            if (memcmp(buffer + i, patternBytes, patternLength) == 0) {
-                offset = fileOffset + i;
-                fclose(file);
-                return offset;
-            }
-        }
-        fileOffset += bytesRead;
-    }
-
-    fclose(file);
-    return offset; // Pattern not found
-}
-
-
-
 // Function to search for a signature in a file
 void searchSignature(const char *filename, const char *signature, int signatureLength) {
     FILE *file = fopen(filename, "rb");
@@ -58,13 +17,6 @@ void searchSignature(const char *filename, const char *signature, int signatureL
     fseek(file, 0, SEEK_END);
     long fileSize = ftell(file);
     fseek(file, 0, SEEK_SET);
-
-    // Check if the file size is smaller than the required size for signature check
-    if (fileSize < signatureLength) {
-        printf("Error: File size is smaller than signature length + offset\n");
-        fclose(file);
-        return;
-    }
 
     // Read the entire file into a buffer
     unsigned char *buffer = (unsigned char *)malloc(fileSize);
@@ -125,61 +77,12 @@ void searchSignature(const char *filename, const char *signature, int signatureL
     free(signatureCopy);
 }
 
-long getFileSize(const char *filename) {
-    FILE *file;
-    long size;
-
-    // Open the file in binary mode
-    file = fopen(filename, "rb");
-
-    // Check if file opened successfully
-    if (file == NULL) {
-        printf("Error opening file.\n");
-        return -1; // Return -1 to indicate error
-    }
-
-    // Move file pointer to the end of the file
-    fseek(file, 0, SEEK_END);
-
-    // Get the current position of the file pointer
-    size = ftell(file);
-
-    // Close the file
-    fclose(file);
-
-    return size;
-}
-
-int checkFileSize(int fileSize, int offset, int signatureSize) {
-    if (fileSize < 0) {
-        printf("ERROR: Invalid file size\n");
-        return 1;
-    }
-    if (offset < 0) {
-        printf("ERROR: Invalid offset\n");
-        return 2;
-    }
-    if (signatureSize <= 0) {
-        printf("ERROR: Invalid signature size\n");
-        return 3;
-    }
-    if (fileSize < offset + signatureSize) {
-        printf("ERROR: File size too small for signature\n");
-        return 4;
-    }
-    return 0;
-}
-
-
-
 int main() {
     FILE *file;
     char signature[MAX_SIGNATURE_LENGTH + 1]; // +1 for null terminator
     size_t bytes_read;
     char filepath[100]; // Assuming the maximum length of the file path is 100 characters
     char filepathToScan[100];
-    const char *filename = filepathToScan ; // Path to the file
-    const char *pattern = signature;
 
     // Prompt the user to input the file path
     printf("Please enter the path of the file containing the hexadecimal signature: ");
@@ -190,15 +93,12 @@ int main() {
     fgets(filepathToScan, sizeof(filepathToScan), stdin);
     filepathToScan[strcspn(filepathToScan, "\n")] = 0; // Remove trailing newline
 
-
     // Open the file in binary mode
     file = fopen(filepath, "rb");
     if (file == NULL) {
         printf("Error: Unable to open file at path '%s'\n", filepath);
         return 1;
     }
-
-
 
     // Read the signature from the file
     bytes_read = fread(signature, 1, MAX_SIGNATURE_LENGTH, file);
@@ -207,44 +107,14 @@ int main() {
         fclose(file);
         return 1;
     }
-
     signature[bytes_read] = '\0'; // Null-terminate the signature
 
     // Close the file
     fclose(file);
 
     // Print the signature as it is
-    printf("\nSignature read from file: %s\n", signature);
+    printf("Signature read from file:\n%s\n", signature);
 
-
-    // Find the size of offset in the file
-    long offset = findPatternInFile(filename, pattern);
-
-    if (offset != -1) {
-        printf("\nPattern found at offset: %ld bytes\n", offset);
-    } else {
-        printf("Pattern not found in the file.\n");
-    }
-
-    // Get file size for the program file
-    file = fopen(filepathToScan, "rb");
-    if (file == NULL) {
-        printf("Error: Unable to open file at path '%s'\n", filepathToScan);
-        return 1;
-    }
-
-    fseek(file, 0, SEEK_END);
-    long programFileSize = ftell(file);
-    fclose(file);
-
-
-
-    // Print program file size
-    printf("Program file size: %ld bytes\n", programFileSize);
-    // Print signature size
-    printf("Signature size: %zu bytes\n", bytes_read);
-
-    checkFileSize(programFileSize,offset,bytes_read);
     searchSignature(filepathToScan, signature, strlen(signature));
 
     return 0;
