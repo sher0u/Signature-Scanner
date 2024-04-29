@@ -4,6 +4,41 @@
 #include <ctype.h>
 
 #define MAX_SIGNATURE_LENGTH 8
+#define MAX_LENGTH 100  // Maximum length of each line in the file
+
+
+//function to read the offset and the signature
+
+int read_signature_and_offset(const char *file_name, char *signature, char *offset) {
+    FILE *file = fopen(file_name, "r");
+    if (file == NULL) {
+        printf("Error opening file.\n");
+        return 1;
+    }
+
+    // Read the first line (signature)
+    if (fgets(signature, MAX_LENGTH, file) == NULL) {
+        printf("Error reading signature.\n");
+        fclose(file);
+        return 1;
+    }
+    // Remove newline character if present
+    if (signature[strlen(signature) - 1] == '\n')
+        signature[strlen(signature) - 1] = '\0';
+
+    // Read the second line (offset)
+    if (fgets(offset, MAX_LENGTH, file) == NULL) {
+        printf("Error reading offset.\n");
+        fclose(file);
+        return 1;
+    }
+    // Remove newline character if present
+    if (offset[strlen(offset) - 1] == '\n')
+        offset[strlen(offset) - 1] = '\0';
+
+    fclose(file);
+    return 0;
+}
 
 // Function to search for a signature in a file
 void searchSignature(const char *filename, const char *signature, int signatureLength) {
@@ -83,6 +118,7 @@ int main() {
     size_t bytes_read;
     char filepath[100]; // Assuming the maximum length of the file path is 100 characters
     char filepathToScan[100];
+    char offset[MAX_LENGTH];
 
     // Prompt the user to input the file path
     printf("Please enter the path of the file containing the hexadecimal signature: ");
@@ -100,20 +136,13 @@ int main() {
         return 1;
     }
 
-    // Read the signature from the file
-    bytes_read = fread(signature, 1, MAX_SIGNATURE_LENGTH, file);
-    if (bytes_read == 0) {
-        printf("Error: Unable to read signature from file\n");
-        fclose(file);
-        return 1;
-    }
-    signature[bytes_read] = '\0'; // Null-terminate the signature
-
-    // Close the file
-    fclose(file);
+    // Read the signature and offset  from the file
+    read_signature_and_offset(filepath,signature,offset);
 
     // Print the signature as it is
-    printf("Signature read from file:\n%s\n", signature);
+    printf("\nSignature read from file: %s\n", signature);
+    // Print the signature as it is
+    printf("Signature read from file: %s\n", offset);
 
     searchSignature(filepathToScan, signature, strlen(signature));
 
