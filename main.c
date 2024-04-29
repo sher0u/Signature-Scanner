@@ -180,10 +180,9 @@ int main() {
     printf("Signature read from file: %s\n", offset);
     //printf the offset from the exe file
 
-    // Prompt the user to input the offset to read from
-    long offsetValue;
-    printf("Please enter the offset (in hexadecimal) to read from: ");
-    scanf("%lx", &offsetValue);
+    // Assign offset from the variable
+    long offsetValue = strtol(offset, NULL, 16);
+
 
     // Read data from the file at the specified offset
     read_file_at_offset(filepathToScan, offsetValue);
