@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <stdbool.h>
 
 #define MAX_SIGNATURE_LENGTH 8
 #define MAX_LENGTH 100  // Maximum length of each line in the file
@@ -187,12 +186,10 @@ void searchSignature(const char *filename, const char *signature, int signatureL
 int main() {
     FILE *file;
     char signature[MAX_SIGNATURE_LENGTH + 1]; // +1 for null terminator
-    size_t bytes_read;
     char filepath[100]; // Assuming the maximum length of the file path is 100 characters
     char filepathToScan[100];
     char NameFile[100];
     char offset[MAX_LENGTH];
-    char offsetFake[MAX_LENGTH];
 
     // Prompt the user to input the file path
     printf("Please enter the path of the file containing the hexadecimal signature: ");
@@ -236,7 +233,7 @@ int main() {
 
 // Now you can call the compareSignatures function with the string representations
     if(compareSignatures(hexSignature, signature)) {
-        printf("Signatures found in ! :%s",NameFile);
+        printf("Signatures found in:%s",NameFile);
     } else {
         printf("Signatures do not match!\n");
     }
