@@ -9,7 +9,7 @@
 #define SIGNATURE_SIZE 4
 
 
-//comparing signature 
+//comparing signature
 bool compareSignatures(const char *signature1, const char *signature2) {
     // Get the lengths of the signatures
     size_t len1 = strlen(signature1);
@@ -70,8 +70,8 @@ unsigned int read_file_at_offset(const char* file_path, long offset) {
     return signature;
 }
 
-//function to read the offset and the signature adn the name from the text file 
-int read_signature_and_offset(const char *file_name, char *signature, char *offset) {
+//function to read the offset and the signature adn the name from the text file
+int read_signature_and_offset(const char *file_name, char *signature, char *offset,char *name) {
     FILE *file = fopen(file_name, "r");
     if (file == NULL) {
         printf("Error opening file.\n");
@@ -98,7 +98,15 @@ int read_signature_and_offset(const char *file_name, char *signature, char *offs
     if (offset[strlen(offset) - 1] == '\n')
         offset[strlen(offset) - 1] = '\0';
 
-    
+    // Read the third line (offset)
+    if (fgets(name, MAX_LENGTH, file) == NULL) {
+        printf("Error reading offset.\n");
+        fclose(file);
+        return 1;
+    }
+    // Remove newline character if present
+    if (offset[strlen(offset) - 1] == '\n')
+        offset[strlen(offset) - 1] = '\0';
 
     fclose(file);
     return 0;
@@ -182,6 +190,7 @@ int main() {
     size_t bytes_read;
     char filepath[100]; // Assuming the maximum length of the file path is 100 characters
     char filepathToScan[100];
+    char NameFile[100];
     char offset[MAX_LENGTH];
     char offsetFake[MAX_LENGTH];
 
@@ -200,9 +209,8 @@ int main() {
         printf("Error: Unable to open file at path '%s'\n", filepath);
         return 1;
     }
-
     // Read the signature and offset  from the file
-    read_signature_and_offset(filepath,signature,offset);
+    read_signature_and_offset(filepath,signature,offset,NameFile);
 
 
     // Print the signature as it is
@@ -228,7 +236,7 @@ int main() {
 
 // Now you can call the compareSignatures function with the string representations
     if(compareSignatures(hexSignature, signature)) {
-        printf("Signatures match!\n");
+        printf("Signatures found in ! :%s",NameFile);
     } else {
         printf("Signatures do not match!\n");
     }
