@@ -7,9 +7,35 @@
 #define MAX_LENGTH 100  // Maximum length of each line in the file
 #define SIGNATURE_SIZE 4
 
+// Function to check for the presence of an MZ header in a file
+int checkMZHeader(const char *filename) {
+    FILE *file = fopen(filename, "rb");
+    if (file == NULL) {
+        perror("Error opening file");
+        exit(-1) ; // Return -1 to indicate error
+    }
+
+    // Read the first two bytes of the file
+    unsigned char header[2];
+    if (fread(header, 1, 2, file) != 2) {
+        printf("Error reading file.\n");
+        fclose(file);
+        exit(-1); // Return -1 to indicate error
+    }
+
+    // Close the file
+    fclose(file);
+
+    // Check for MZ header (ASCII characters 'M' (0x4D) followed by 'Z' (0x5A))
+    if (header[0] == 0x4D && header[1] == 0x5A) {
+        return 0; // Return 1 to indicate MZ header found
+    } else {
+        exit(-1); // Return 0 to indicate MZ header not found
+    }
+}
 
 //function to read the offset and the signature and the name from the text file
-int read_signature_and_offset(const char *file_name, char *signature, char *offset,char *name) {
+int read_signature_and_offset(const char *file_name, char *signature, char *offset, char *name) {
     FILE *file = fopen(file_name, "r");
     if (file == NULL) {
         printf("Error opening file.\n");
@@ -89,9 +115,30 @@ size_t calculateSignatureSize(const char *signature) {
     return size;
 }
 
+//function of cheacking with the file size
+int check_file_size(int exe_file_size, int offset, int signature_size) {
+    if (exe_file_size < 0) {
+        printf("ERROR: Invalid executable file size.\n");
+        return 1;
+    }
+    if (offset < 0) {
+        printf("ERROR: Invalid offset.\n");
+        return 2;
+    }
+    if (signature_size <= 0) {
+        printf("ERROR: Invalid signature size.\n");
+        return 3;
+    }
+    if (exe_file_size < offset + signature_size) {
+        printf("ERROR: Offset and signature size exceed file size.\n");
+        return 4;
+    }
+    return 0;
+}
+
 // reading the signature from the exe
-unsigned int read_file_at_offset(const char* file_path, long offset) {
-    FILE* file = fopen(file_path, "rb");
+unsigned int read_file_at_offset(const char *file_path, long offset) {
+    FILE *file = fopen(file_path, "rb");
     if (file == NULL) {
         printf("Unable to open file '%s'.\n", file_path);
         return 0;  // Return 0 if file cannot be opened
@@ -126,7 +173,6 @@ unsigned int read_file_at_offset(const char* file_path, long offset) {
 }
 
 
-
 // Function to search for a signature in a file
 void searchSignature(const char *filename, const char *signature, int signatureLength) {
     FILE *file = fopen(filename, "rb");
@@ -141,7 +187,7 @@ void searchSignature(const char *filename, const char *signature, int signatureL
     fseek(file, 0, SEEK_SET);
 
     // Read the entire file into a buffer
-    unsigned char *buffer = (unsigned char *)malloc(fileSize);
+    unsigned char *buffer = (unsigned char *) malloc(fileSize);
     if (buffer == NULL) {
         fclose(file);
         perror("Memory allocation error");
@@ -151,17 +197,8 @@ void searchSignature(const char *filename, const char *signature, int signatureL
     fread(buffer, 1, fileSize, file);
     fclose(file);
 
-
-
-    // Check for MZ header in the first two bytes of the file
-    if (buffer[0] == 0x4D && buffer[1] == 0x5A) {
-        printf("The file has an MZ header, indicating a PE format executable.\n");
-    } else {
-        printf("The file does not have an MZ header, possibly not a Windows executable.\n");
-    }
-
     // Allocate memory for hexadecimal representation (twice the file size + 1 for null terminator)
-    char *hexBuffer = (char *)malloc(2 * fileSize + 1);
+    char *hexBuffer = (char *) malloc(2 * fileSize + 1);
     if (hexBuffer == NULL) {
         free(buffer);
         perror("Memory allocation error");
@@ -187,44 +224,10 @@ void searchSignature(const char *filename, const char *signature, int signatureL
         signatureCopy[i] = toupper(signatureCopy[i]);
     }
 
-    // Search for the signature in the hexadecimal buffer
-    char *pos = strstr(hexBuffer, signatureCopy);
-    if (pos != NULL) {
-        printf("Signature found in file: %s\n", filename);
-    } else {
-        printf("Signature not found in file: %s\n", filename);
-    }
-
     // Free allocated memory
     free(buffer);
     free(hexBuffer);
     free(signatureCopy);
-}
-
-
-
-
-
-
-//function of cheacking with the file size
-int check_file_size(int exe_file_size, int offset, int signature_size) {
-    if (exe_file_size < 0) {
-        printf("ERROR: Invalid executable file size.\n");
-        return 1;
-    }
-    if (offset < 0) {
-        printf("ERROR: Invalid offset.\n");
-        return 2;
-    }
-    if (signature_size <= 0) {
-        printf("ERROR: Invalid signature size.\n");
-        return 3;
-    }
-    if (exe_file_size < offset + signature_size) {
-        printf("ERROR: Offset and signature size exceed file size.\n");
-        return 4;
-    }
-    return 0;
 }
 
 
@@ -259,6 +262,10 @@ int main() {
     char filepathToScan[100];
     char NameFile[100];
     char offset[MAX_LENGTH];
+    unsigned int Signature;
+    char hexSignature[MAX_SIGNATURE_LENGTH + 1]; // +1 for null terminator
+    const char *filename = filepathToScan; // Replace with the actual file name
+
 
     // Prompt the user to input the file path
     printf("Please enter the path of the file containing the hexadecimal signature: ");
@@ -276,56 +283,47 @@ int main() {
         return 1;
     }
     // Read the signature and offset  from the file
-    read_signature_and_offset(filepath,signature,offset,NameFile);
+    read_signature_and_offset(filepath, signature, offset, NameFile);
 
-    // Print the signature as it is
-    printf("\nSignature read from file: %s\n", signature);
-    // Print the signature as it is
-    printf("Offset read from file: %s\n", offset);
-    //printf the offset from the exe file
+    // MZ CHeacker
+    checkMZHeader(filename);
 
     // Assign offset from the variable
     long offsetValue = strtol(offset, NULL, 16);
 
 
     // Read data from the file at the specified offset
-    unsigned int Signature;
-    Signature =read_file_at_offset(filepathToScan, offsetValue);
-    printf("Signature read from file: %X\n", Signature);
-
+    Signature = read_file_at_offset(filepathToScan, offsetValue);
     searchSignature(filepathToScan, signature, strlen(signature));
-
     // Convert the unsigned int signature to a string representation
-    char hexSignature[MAX_SIGNATURE_LENGTH + 1]; // +1 for null terminator
     sprintf(hexSignature, "%X", Signature);
 
 // Now you can call the compareSignatures function with the string representations
-    if(compareSignatures(hexSignature, signature)) {
-        printf("Signatures found in:%s",NameFile);
+    if (compareSignatures(hexSignature, signature)) {
+        printf("\nSignatures found in:%s", NameFile);
     } else {
         printf("Signatures do not match!\n");
     }
 
+    // Cheaking the sizes
     const char *exe_file_path = filepathToScan;
     long exe_size = calculateExeSize(exe_file_path);
-    if (exe_size != -1) {
-        printf("\nSize of executable file : %ld bytes\n",exe_size);
-    }
 
     unsigned long long int OFFsset = offsetValue;
     size_t offset_size = calculateOffsetSize(OFFsset);
-    printf("Size of offset 0x%llX: %zu bytes\n", OFFsset, offset_size);
 
     const char *SIGNATURE = signature; // Example signature value
     size_t signature_size = calculateSignatureSize(SIGNATURE);
-    printf("Size of signature '%s': %zu bytes\n", SIGNATURE, signature_size);
 
-    int result = check_file_size(exe_size, offset_size, signature_size);
+    int result ;
+    result = check_file_size(exe_size, offset_size, signature_size);
     if (result == 0) {
         printf("File size check passed.\n");
     } else {
         printf("File size check failed. Error code: %d\n", result);
     }
+
+
 
     return 0;
 }
