@@ -254,6 +254,18 @@ bool compareSignatures(const char *signature1, const char *signature2) {
     return true;
 }
 
+int prepareSignatureVerification(const char *filepathToScan, const char *offset, const char *signature) {
+        long offsetValue = strtol(offset, NULL, 16);
+        long exe_size = calculateExeSize(filepathToScan);
+        unsigned long long int offsetSize = offsetValue;
+        size_t offset_size = calculateOffsetSize(offsetSize);
+        size_t signature_size = calculateSignatureSize(signature);
+        int result = check_file_size(exe_size, offset_size, signature_size);
+        return result;
+
+}
+
+
 
 int main() {
     FILE *file;
@@ -305,25 +317,12 @@ int main() {
         printf("Signatures do not match!\n");
     }
 
-    // Cheaking the sizes
-    const char *exe_file_path = filepathToScan;
-    long exe_size = calculateExeSize(exe_file_path);
 
-    unsigned long long int OFFsset = offsetValue;
-    size_t offset_size = calculateOffsetSize(OFFsset);
-
-    const char *SIGNATURE = signature; // Example signature value
-    size_t signature_size = calculateSignatureSize(SIGNATURE);
-
-    int result ;
-    result = check_file_size(exe_size, offset_size, signature_size);
-    if (result == 0) {
-        printf("File size check passed.\n");
-    } else {
-        printf("File size check failed. Error code: %d\n", result);
+    int Result;
+    Result = prepareSignatureVerification(filepathToScan, offset, signature);
+    if (Result != 0) {
+        exit(-1);
     }
-
-
-
+    
     return 0;
 }
