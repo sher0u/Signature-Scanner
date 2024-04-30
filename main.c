@@ -185,6 +185,67 @@ void searchSignature(const char *filename, const char *signature, int signatureL
     free(signatureCopy);
 }
 
+// Function to calculate the size of the executable file
+long calculateExeSize(const char *file_path) {
+    FILE *file = fopen(file_path, "rb");
+    if (file == NULL) {
+        printf("Error opening file '%s'.\n", file_path);
+        return -1; // Return -1 to indicate error
+    }
+
+    // Seek to the end of the file to get its size
+    fseek(file, 0, SEEK_END);
+    long file_size = ftell(file);
+
+    // Close the file
+    fclose(file);
+
+    return file_size;
+
+}
+
+// Function to calculate the size of the offset
+size_t calculateOffsetSize(unsigned long long int offset) {
+    size_t size = 0;
+    while (offset != 0) {
+        offset /= 16; // Assuming hexadecimal offset, divide by 16
+        size++;
+    }
+    return size;
+}
+
+// Function to calculate the size of the signature
+size_t calculateSignatureSize(const char *signature) {
+    size_t size = 0;
+    // Iterate through the signature until a null terminator is encountered
+    while (signature[size] != '\0') {
+        size++;
+    }
+    return size;
+}
+
+//function of cheacking with the file size
+
+int check_file_size(int exe_file_size, int offset, int signature_size) {
+    if (exe_file_size < 0) {
+        printf("ERROR: Invalid executable file size.\n");
+        return 1;
+    }
+    if (offset < 0) {
+        printf("ERROR: Invalid offset.\n");
+        return 2;
+    }
+    if (signature_size <= 0) {
+        printf("ERROR: Invalid signature size.\n");
+        return 3;
+    }
+    if (exe_file_size < offset + signature_size) {
+        printf("ERROR: Offset and signature size exceed file size.\n");
+        return 4;
+    }
+    return 0;
+}
+
 int main() {
     FILE *file;
     char signature[MAX_SIGNATURE_LENGTH + 1]; // +1 for null terminator
@@ -237,6 +298,27 @@ int main() {
         printf("Signatures found in:%s",NameFile);
     } else {
         printf("Signatures do not match!\n");
+    }
+
+    const char *exe_file_path = filepathToScan;
+    long exe_size = calculateExeSize(exe_file_path);
+    if (exe_size != -1) {
+        printf("\nSize of executable file : %ld bytes\n",exe_size);
+    }
+
+    unsigned long long int OFFsset = offsetValue;
+    size_t offset_size = calculateOffsetSize(OFFsset);
+    printf("Size of offset 0x%llX: %zu bytes\n", OFFsset, offset_size);
+
+    const char *SIGNATURE = signature; // Example signature value
+    size_t signature_size = calculateSignatureSize(SIGNATURE);
+    printf("Size of signature '%s': %zu bytes\n", SIGNATURE, signature_size);
+
+    int result = check_file_size(exe_size, offset_size, signature_size);
+    if (result == 0) {
+        printf("File size check passed.\n");
+    } else {
+        printf("File size check failed. Error code: %d\n", result);
     }
 
     return 0;
