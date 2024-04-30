@@ -444,22 +444,53 @@ int main() {
     char hexSignature[MAX_SIGNATURE_LENGTH + 1]; // +1 for null terminator
     const char *filename = filepathToScan; // Replace with the actual file name
     int Result ;
+    int PrintCheck;
+    int *ScanCheck;
 
 
 
     // Prompt the user to input the file path
-    printf("Please enter the path of the file containing the hexadecimal signature: ");
-    fgets(filepath, sizeof(filepath), stdin);
+    PrintCheck = printf("Please enter the path of the file containing the hexadecimal signature: ");
+    if (PrintCheck < 0) {
+        printf("Error: Unable to prompt user for input.\n");
+        return -1;
+    }
+    // Read the user input
+    ScanCheck = fgets(filepath, sizeof(filepath), stdin);
+    if (ScanCheck == NULL) {
+        printf("Error: Unable to read user input.\n");
+        return -1;
+    }
     filepath[strcspn(filepath, "\n")] = 0; // Remove trailing newline
 
-    printf("Please enter the path of the Program: ");
-    fgets(filepathToScan, sizeof(filepathToScan), stdin);
+
+    PrintCheck =     printf("Please enter the path of the Program: ");
+
+    if (PrintCheck < 0) {
+        printf("Error: Unable to prompt user for input.\n");
+        return -1;
+    }
+    // Read the user input
+    ScanCheck = fgets(filepathToScan, sizeof(filepathToScan), stdin);
+
+    if (ScanCheck == NULL) {
+        PrintCheck = printf("Please enter the path of the file containing the hexadecimal signature: ");
+        if (PrintCheck < 0) {
+            printf("Error: Unable to prompt user for input.\n");
+            return -1;
+        }
+        return -1;
+    }
     filepathToScan[strcspn(filepathToScan, "\n")] = 0; // Remove trailing newline
 
     // Open the file in binary mode
     file = fopen(filepath, "rb");
     if (file == NULL) {
-        printf("Error: Unable to open file at path '%s'\n", filepath);
+        PrintCheck =printf("Error: Unable to open file at path '%s'\n", filepath);
+        if (PrintCheck < 0) {
+            printf("Error: Unable to prompt user for input.\n");
+            return -1;
+        }
         return 1;
     }
     // Read the signature and offset  from the file
@@ -489,11 +520,20 @@ int main() {
 
 // Now you can call the compareSignatures function with the string representations
     if (compareSignatures(hexSignature, signature)) {
-        printf("\nSignatures found in:%s\n", NameFile);
+        PrintCheck =printf("\nSignatures found in:%s\n", NameFile);
+        if (PrintCheck < 0) {
+            printf("Error: Unable to prompt user for input.\n");
+            return -1;
+        }
+
     } else {
-        printf("Signatures do not match!\n");
+
+        PrintCheck =printf("Signatures do not match!\n");
+        if (PrintCheck < 0) {
+            printf("Error: Unable to prompt user for input.\n");
+            return -1;
+        }
+
     }
-
-
     return 0;
 }
