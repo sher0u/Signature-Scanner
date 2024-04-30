@@ -255,6 +255,16 @@ bool compareSignatures(const char *signature1, const char *signature2) {
     return true;
 }
 
+// Function to prepare for signature verification by calculating sizes and checking file integrity
+int prepareSignatureVerification(const char *filepathToScan, const char *offset, const char *signature) {
+    long offsetValue = strtol(offset, NULL, 16);
+    long exe_size = calculateExeSize(filepathToScan);
+    unsigned long long int offsetSize = offsetValue;
+    size_t offset_size = calculateOffsetSize(offsetSize);
+    size_t signature_size = calculateSignatureSize(signature);
+    int result = check_file_size(exe_size, offset_size, signature_size);
+    return result;
+}
 
 int main() {
     FILE *file;
@@ -266,7 +276,7 @@ int main() {
     unsigned int Signature;
     char hexSignature[MAX_SIGNATURE_LENGTH + 1]; // +1 for null terminator
     const char *filename = filepathToScan; // Replace with the actual file name
-    int result ;
+    int Result ;
 
 
 
@@ -294,26 +304,19 @@ int main() {
 
     // Assign offset from the variable
     long offsetValue = strtol(offset, NULL, 16);
-    // Cheaking the sizes
-    const char *exe_file_path = filepathToScan;
-    long exe_size = calculateExeSize(exe_file_path);
+    // Read the signature and offset from the file
+    read_signature_and_offset(filepath, signature, offset, NameFile);
 
-    unsigned long long int OFFsset = offsetValue;
-    size_t offset_size = calculateOffsetSize(OFFsset);
-
-    const char *SIGNATURE = signature; // Example signature value
-    size_t signature_size = calculateSignatureSize(SIGNATURE);
-
-    result = check_file_size(exe_size, offset_size, signature_size);
-    if (result != 0) {
+    // Check file integrity and prepare for signature verification
+    Result = prepareSignatureVerification(filepathToScan, offset, signature);
+    if (Result != 0) {
         exit(-1);
     }
-
-
 
     // Read data from the file at the specified offset
     Signature = read_file_at_offset(filepathToScan, offsetValue);
     searchSignature(filepathToScan, signature, strlen(signature));
+
     // Convert the unsigned int signature to a string representation
     sprintf(hexSignature, "%X", Signature);
 
