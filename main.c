@@ -30,6 +30,7 @@ int checkMZHeader(const char *filename) {
     if (header[0] == 0x4D && header[1] == 0x5A) {
         return 0; // Return 1 to indicate MZ header found
     } else {
+        printf("\nthis is not and exe file");
         exit(-1); // Return 0 to indicate MZ header not found
     }
 }
@@ -231,7 +232,7 @@ void searchSignature(const char *filename, const char *signature, int signatureL
 }
 
 
-//comparing signature
+//Comparing signature
 bool compareSignatures(const char *signature1, const char *signature2) {
     // Get the lengths of the signatures
     size_t len1 = strlen(signature1);
@@ -323,6 +324,5 @@ int main() {
     if (Result != 0) {
         exit(-1);
     }
-    
     return 0;
 }
