@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #define MAX_SIGNATURE_LENGTH 8
 #define MAX_LENGTH 100  // Maximum length of each line in the file
@@ -350,7 +349,6 @@ int prepareSignatureVerification(const char *filepathToScan, const char *offset,
 
 
 int main() {
-    FILE *file;
     char SignatureTxt[MAX_SIGNATURE_LENGTH + 1];//signture from text file
     char filepath[MAX_LENGTH]; // Adjusted buffer size
     char filepathToScan[MAX_LENGTH]; // Adjusted buffer size
@@ -358,7 +356,6 @@ int main() {
     char offset[MAX_LENGTH]; //offset from text file
     unsigned int SignatureExe;
     char hexSignature[MAX_SIGNATURE_LENGTH + 1];
-    int Result;
     char *ScanCheck;
 
     // Prompt the user to input the file path for the signature file
