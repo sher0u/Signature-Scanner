@@ -359,9 +359,16 @@ int main() {
     unsigned int SignatureExe;
     char hexSignature[MAX_SIGNATURE_LENGTH + 1];
     char *ScanCheck;
+    int CheackPrint;
 
     // Prompt the user to input the file path for the signature file
-    printf("Please enter the path of the file containing the hexadecimal signature: ");
+
+    CheackPrint =printf("Please enter the path of the file containing the hexadecimal signature: ");
+    if (CheackPrint<0)
+    {
+        printf("error of printing\n");
+        return -1;
+    }
     ScanCheck = fgets(filepath, sizeof(filepath), stdin);
     if (ScanCheck == NULL) {
         printf("Error: Unable to read user input.\n");
@@ -370,7 +377,14 @@ int main() {
     filepath[strcspn(filepath, "\n")] = 0; // Remove trailing newline
 
     // Prompt the user to input the file path for the executable
-    printf("Please enter the path of the Program: ");
+
+     CheackPrint = printf("Please enter the path of the Program: ");
+    if (CheackPrint<0)
+    {
+        printf("error of printing\n");
+        return -1;
+    }
+
     ScanCheck = fgets(filepathToScan, sizeof(filepathToScan), stdin);
     if (ScanCheck == NULL) {
         printf("Error: Unable to read user input.\n");
@@ -401,9 +415,20 @@ int main() {
 
     // Compare the signatures
     if (compareSignatures(hexSignature, SignatureTxt)) {
-        printf("\nSignatures found in: %s\n", NameFile);
+        CheackPrint =printf("\nSignatures found in: %s\n", NameFile);
+        if (CheackPrint<0)
+        {
+            printf("error of printing\n");
+            return -1;
+        }
+
     } else {
-        printf("Signatures do not match!\n");
+        CheackPrint =printf("Signatures do not match!\n");
+        if (CheackPrint<0)
+        {
+            printf("error of printing\n");
+            return -1;
+        }
     }
     return 0;
 }
