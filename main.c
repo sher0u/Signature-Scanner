@@ -437,7 +437,9 @@ int main() {
 
     // Read data from the file at the specified offset
     SignatureExe = read_file_at_offset(filepathToScan, offsetValue);
-
+    if (SignatureExe <= 0){
+        return -4;
+    }
     // Convert the unsigned int signature to a string representation
     sprintf(hexSignature, "%X", SignatureExe);
 
