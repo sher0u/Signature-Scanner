@@ -3,7 +3,7 @@
 #include <string.h>
 
 #define MAX_SIGNATURE_LENGTH 8
-#define MAX_LENGTH 100  // Maximum length of each line in the file
+#define MAX_LENGTH 100
 #define SIGNATURE_SIZE 4
 
 
@@ -19,82 +19,82 @@ int read_signature_and_offset(const char *file_name, char *signature, char *offs
     if (name == NULL){
         return 3;
     }
-        FILE *file = fopen(file_name, "r");
-        if (file == NULL) {
+    FILE *file = fopen(file_name, "r");
+    if (file == NULL) {
 
-            int CheackPrint = printf("Error opening file.\n");
-            if (CheackPrint<0)
-            {
-                printf("error of printing\n");
-                return -1;
-            }
-            return 4;
+        int CheackPrint = printf("Error opening file.\n");
+        if (CheackPrint<0)
+        {
+            printf("error of printing\n");
+            return -1;
         }
+        return 4;
+    }
 
-        // Read the first line (signature)
-        if (fgets(signature, MAX_LENGTH, file) == NULL) {
+    // Read the first line (signature)
+    if (fgets(signature, MAX_LENGTH, file) == NULL) {
 
-            int CheackPrint = printf("Error reading signature.\n");
-            if (CheackPrint<0)
-            {
-                printf("error of printing\n");
-                return -2;
-            }
-            if (fclose(file) != 0) { // Attempt to close the file
-                printf("Error closing the file.\n");
-                return -3;
-            }
-            return 5;
+        int CheackPrint = printf("Error reading signature.\n");
+        if (CheackPrint<0)
+        {
+            printf("error of printing\n");
+            return -2;
         }
-        // Remove newline character if present
-        if (signature[strlen(signature) - 1] == '\n')
-            signature[strlen(signature) - 1] = '\0';
-
-        // Read the second line (offset)
-        if (fgets(offset, MAX_LENGTH, file) == NULL) {
-
-            int CheackPrint = printf("Error reading offset.\n");
-            if (CheackPrint<0)
-            {
-                printf("error of printing\n");
-                return -5;
-            }
-
-            if (fclose(file) != 0) { // Attempt to close the file
-                printf("Error closing the file.\n");
-                return -6;
-            }
-            return 6;
+        if (fclose(file) != 0) { // Attempt to close the file
+            printf("Error closing the file.\n");
+            return -3;
         }
-        // Remove newline character if present
-        if (offset[strlen(offset) - 1] == '\n')
-            offset[strlen(offset) - 1] = '\0';
+        return 5;
+    }
+    // Remove newline character if present
+    if (signature[strlen(signature) - 1] == '\n')
+        signature[strlen(signature) - 1] = '\0';
 
-        // Read the third line (offset)
-        if (fgets(name, MAX_LENGTH, file) == NULL) {
+    // Read the second line (offset)
+    if (fgets(offset, MAX_LENGTH, file) == NULL) {
 
-            int CheackPrint =printf("Error reading offset.\n");
-            if (CheackPrint<0)
-            {
-                printf("error of printing\n");
-                return -7;
-            }
-
-            if (fclose(file) != 0) { // Attempt to close the file
-                printf("Error closing the file.\n");
-                return -8;
-            }
-            return 7;
+        int CheackPrint = printf("Error reading offset.\n");
+        if (CheackPrint<0)
+        {
+            printf("error of printing\n");
+            return -5;
         }
-        // Remove newline character if present
-        if (offset[strlen(offset) - 1] == '\n')
-            offset[strlen(offset) - 1] = '\0';
 
         if (fclose(file) != 0) { // Attempt to close the file
             printf("Error closing the file.\n");
-            return -9;
+            return -6;
         }
-        return 0;
+        return 6;
+    }
+    // Remove newline character if present
+    if (offset[strlen(offset) - 1] == '\n')
+        offset[strlen(offset) - 1] = '\0';
+
+    // Read the third line (offset)
+    if (fgets(name, MAX_LENGTH, file) == NULL) {
+
+        int CheackPrint =printf("Error reading offset.\n");
+        if (CheackPrint<0)
+        {
+            printf("error of printing\n");
+            return -7;
+        }
+
+        if (fclose(file) != 0) { // Attempt to close the file
+            printf("Error closing the file.\n");
+            return -8;
+        }
+        return 7;
+    }
+    // Remove newline character if present
+    if (offset[strlen(offset) - 1] == '\n')
+        offset[strlen(offset) - 1] = '\0';
+
+    if (fclose(file) != 0) { // Attempt to close the file
+        printf("Error closing the file.\n");
+        return -9;
+    }
+    return 0;
 }
 
 
@@ -403,7 +403,7 @@ int main() {
 
 
     // Prompt the user to input the file path for the executable
-     CheackPrint = printf("Please enter the path of the Program: ");
+    CheackPrint = printf("Please enter the path of the Program: ");
     if (CheackPrint<0)
     {
         printf("error of printing\n");
