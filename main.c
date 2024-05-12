@@ -365,6 +365,28 @@ int prepareSignatureVerification(const char *filepathToScan, const char *offset,
     return 0; // Success
 }
 
+char* removeWhitespace(const char* str) {
+    // Allocate memory for the new string
+    size_t len = strlen(str);
+    char* result = (char*)malloc(len + 1); // +1 for null terminator
+    if (result == NULL) {
+        printf("Memory allocation failed.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Copy non-whitespace characters to the new string
+    size_t j = 0;
+    for (size_t i = 0; i < len; ++i) {
+        if (!isspace((unsigned char)str[i])) {
+            result[j++] = str[i];
+        }
+    }
+    result[j] = '\0'; // Null-terminate the string
+
+    return result;
+}
+
+
 int main() {
     char SignatureTxt[MAX_SIGNATURE_LENGTH + 1]; // Signature from text file
     char filepath[MAX_LENGTH]; // File path for the signature file
@@ -421,12 +443,13 @@ int main() {
         return 1;
     }
 
-    // Print the signature from the executable
-    printf("Signature from executable: %s\n", signatureFromExe);
-    Signatureaxe = *signatureFromExe;
 
+    strcpy(Signatureaxe, signatureFromExe);
+    char* strippedStr = removeWhitespace(Signatureaxe);
     // Free allocated memory
     free(signatureFromExe);
+    printf("Signature from executable: %s\n", strippedStr);
 
+    
     return 0;
 }
