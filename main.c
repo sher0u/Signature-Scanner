@@ -47,6 +47,7 @@ int read_signature_and_offset(const char *file_name, char *signature, char *offs
         }
         return 5;
     }
+
     // Remove newline character if present
     if (signature[strlen(signature) - 1] == '\n')
         signature[strlen(signature) - 1] = '\0';
@@ -288,37 +289,6 @@ int checkMZHeader(const char *filename) {
 }
 
 
-//comparing signature
-bool compareSignatures(const char *signature1, const char *signature2) {
-
-    if(signature1 == NULL){
-        return 1;
-    }
-    if(signature2 == NULL){
-        return 2;
-    } else {
-        // Get the lengths of the signatures
-        size_t len1 = strlen(signature1);
-        size_t len2 = strlen(signature2);
-
-        // If the lengths are different, signatures cannot match
-        if (len1 != len2) {
-            return false;
-        }
-
-        // Compare the signatures character by character
-        for (size_t i = 0; i < len1; ++i) {
-            if (signature1[i] != signature2[i]) {
-                // Signatures do not match
-                return false;
-            }
-        }
-        // Signatures match
-        return true;
-    }
-}
-
-
 
 // Function to prepare for signature verification by calculating sizes and checking file integrity
 int prepareSignatureVerification(const char *filepathToScan, const char *offset, const char *signature) {
@@ -385,6 +355,16 @@ char* removeWhitespace(const char* str) {
 
     return result;
 }
+bool compareSignatures(const char *signature1, const char *signature2, int size) {
+    for (int i = 0; i < size; i++) {
+        if (signature1[i] != signature2[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
 
 
 int main() {
@@ -450,6 +430,19 @@ int main() {
     free(signatureFromExe);
     printf("Signature from executable: %s\n", strippedStr);
 
-    
+
+    bool signaturesMatch = compareSignatures(SignatureTxt, strippedStr, SIGNATURE_SIZE);
+
+    if (signaturesMatch) {
+        printf("Signatures match!\n");
+    } else {
+        printf("Signatures do not match!\n");
+    }
+
+
+
+
+
+
     return 0;
 }
