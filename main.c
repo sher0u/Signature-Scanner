@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #define MAX_SIGNATURE_LENGTH 8
-#define MAX_LENGTH 100  // Maximum length of each line in the file
-#define SIGNATURE_SIZE 4
+#define MAX_LENGTH 100
+#define SIGNATURE_SIZE 8
 
 
 //function to read the offset and the signature and the name from the text file
@@ -18,86 +19,83 @@ int read_signature_and_offset(const char *file_name, char *signature, char *offs
     }
     if (name == NULL){
         return 3;
-    } else{
-        FILE *file = fopen(file_name, "r");
-        if (file == NULL) {
+    }
+    FILE *file = fopen(file_name, "r");
+    if (file == NULL) {
 
-            int CheackPrint = printf("Error opening file.\n");
-            if (CheackPrint<0)
-            {
-                printf("error of printing\n");
-                return -1;
-            }
-
+        int CheackPrint = printf("Error opening file.\n");
+        if (CheackPrint<0)
+        {
+            printf("error of printing\n");
+            return -1;
         }
+        return 4;
+    }
 
-        // Read the first line (signature)
-        if (fgets(signature, MAX_LENGTH, file) == NULL) {
+    // Read the first line (signature)
+    if (fgets(signature, MAX_LENGTH, file) == NULL) {
 
-            int CheackPrint = printf("Error reading signature.\n");
-            if (CheackPrint<0)
-            {
-                printf("error of printing\n");
-                return -1;
-            }
-            if (fclose(file) != 0) { // Attempt to close the file
-                printf("Error closing the file.\n");
-                return 1;
-            }
-            return 1;
+        int CheackPrint = printf("Error reading signature.\n");
+        if (CheackPrint<0)
+        {
+            printf("error of printing\n");
+            return -2;
         }
-        // Remove newline character if present
-        if (signature[strlen(signature) - 1] == '\n')
-            signature[strlen(signature) - 1] = '\0';
-
-        // Read the second line (offset)
-        if (fgets(offset, MAX_LENGTH, file) == NULL) {
-
-            int CheackPrint = printf("Error reading offset.\n");
-            if (CheackPrint<0)
-            {
-                printf("error of printing\n");
-                return -1;
-            }
-
-            if (fclose(file) != 0) { // Attempt to close the file
-                printf("Error closing the file.\n");
-                return 1;
-            }
-            return 1;
+        if (fclose(file) != 0) { // Attempt to close the file
+            printf("Error closing the file.\n");
+            return -3;
         }
-        // Remove newline character if present
-        if (offset[strlen(offset) - 1] == '\n')
-            offset[strlen(offset) - 1] = '\0';
+        return 5;
+    }
+    // Remove newline character if present
+    if (signature[strlen(signature) - 1] == '\n')
+        signature[strlen(signature) - 1] = '\0';
 
-        // Read the third line (offset)
-        if (fgets(name, MAX_LENGTH, file) == NULL) {
+    // Read the second line (offset)
+    if (fgets(offset, MAX_LENGTH, file) == NULL) {
 
-            int CheackPrint =printf("Error reading offset.\n");
-            if (CheackPrint<0)
-            {
-                printf("error of printing\n");
-                return -1;
-            }
-
-            if (fclose(file) != 0) { // Attempt to close the file
-                printf("Error closing the file.\n");
-                return 1;
-            }
-            return 1;
+        int CheackPrint = printf("Error reading offset.\n");
+        if (CheackPrint<0)
+        {
+            printf("error of printing\n");
+            return -5;
         }
-        // Remove newline character if present
-        if (offset[strlen(offset) - 1] == '\n')
-            offset[strlen(offset) - 1] = '\0';
 
         if (fclose(file) != 0) { // Attempt to close the file
             printf("Error closing the file.\n");
-            return 1;
+            return -6;
         }
-        return 1;
-
+        return 6;
     }
+    // Remove newline character if present
+    if (offset[strlen(offset) - 1] == '\n')
+        offset[strlen(offset) - 1] = '\0';
 
+    // Read the third line (offset)
+    if (fgets(name, MAX_LENGTH, file) == NULL) {
+
+        int CheackPrint =printf("Error reading offset.\n");
+        if (CheackPrint<0)
+        {
+            printf("error of printing\n");
+            return -7;
+        }
+
+        if (fclose(file) != 0) { // Attempt to close the file
+            printf("Error closing the file.\n");
+            return -8;
+        }
+        return 7;
+    }
+    // Remove newline character if present
+    if (offset[strlen(offset) - 1] == '\n')
+        offset[strlen(offset) - 1] = '\0';
+
+    if (fclose(file) != 0) { // Attempt to close the file
+        printf("Error closing the file.\n");
+        return -9;
+    }
+    return 0;
 }
 
 
@@ -123,7 +121,7 @@ long calculateExeSize(const char *file_path) {
     // Close the file
     if (fclose(file) != 0) { // Attempt to close the file
         printf("Error closing the file.\n");
-        return 1;
+        return -2;
     }
     return file_size;
 
@@ -163,7 +161,7 @@ int check_file_size(int exe_file_size, int offset, int signature_size) {
             printf("error of printing\n");
             return -1;
         }
-        return 1;
+        exit(1) ;
     }
     if (offset < 0) {
 
@@ -171,9 +169,9 @@ int check_file_size(int exe_file_size, int offset, int signature_size) {
         if (CheackPrint<0)
         {
             printf("error of printing\n");
-            return -1;
+            exit(-2);
         }
-        exit(2);
+        return 2;
     }
     if (signature_size <= 0) {
 
@@ -181,9 +179,9 @@ int check_file_size(int exe_file_size, int offset, int signature_size) {
         if (CheackPrint<0)
         {
             printf("error of printing\n");
-            return -1;
+            return -3;
         }
-        exit(3);
+        exit(3) ;
     }
     if (exe_file_size < offset + signature_size) {
 
@@ -191,86 +189,80 @@ int check_file_size(int exe_file_size, int offset, int signature_size) {
         if (CheackPrint<0)
         {
             printf("error of printing\n");
-            return -1;
+            return -4;
         }
-        exit(4);
-
+        exit(4) ;
     }
     return 0;
 }
 
-// reading the signature from the exe
-unsigned int read_file_at_offset(const char *file_path, long offset) {
+char *read_signature_from_exe(const char *file_path, long offset) {
     if(file_path == NULL) {
-        return 1;
+        return NULL;
     }
     FILE *file = fopen(file_path, "rb");
     if (file == NULL) {
-        int CheackPrint =printf("Unable to open file '%s'.\n", file_path);
-        if (CheackPrint<0)
-        {
-            printf("error of printing\n");
-            return -1;
-        }
-        return 0;
+        printf("Unable to open file '%s'.\n", file_path);
+        return NULL;
     }
 
     // Seek to the specified offset
     if (fseek(file, offset, SEEK_SET) != 0) {
-
-        int CheackPrint =printf("Error seeking to offset.\n");
-        if (CheackPrint<0)
-        {
-            printf("error of printing\n");
-            return -1;
-        }
-
-        if (fclose(file) != 0) { // Attempt to close the file
-            printf("Error closing the file.\n");
-            return 1;
-        }
-        return 0;  // Return 0 if seeking fails
+        printf("Error seeking to offset.\n");
+        fclose(file);
+        return NULL;
     }
 
-    // Read 4 bytes (32 bits) from the file
-    unsigned char data[SIGNATURE_SIZE];
-    size_t bytes_read = fread(data, 1, SIGNATURE_SIZE, file);
-    if (bytes_read != SIGNATURE_SIZE) {
-
-        int CheackPrint =printf("Error reading signature from file.\n");
-        if (CheackPrint<0)
-        {
-            printf("error of printing\n");
-            return -1;
-        }
-
-        if (fclose(file) != 0) { // Attempt to close the file
-            printf("Error closing the file.\n");
-            return 1;
-        }
-        return 0;  // Return 0 if reading fails
+    // Read 8 bytes (64 bits) from the file
+    unsigned char *data = (unsigned char *)malloc(8);
+    if (data == NULL) {
+        printf("Memory allocation failed.\n");
+        fclose(file);
+        return NULL;
     }
 
-    // Convert the signature bytes to an unsigned integer value
-    unsigned int signature = 0;
-    for (int i = 0; i < SIGNATURE_SIZE; ++i) {
-        signature = (signature << 8) | data[i];
+    size_t bytes_read = fread(data, 1, 8, file);
+    if (bytes_read != 8) {
+        printf("Error reading signature from file.\n");
+        fclose(file);
+        free(data);
+        return NULL;
     }
 
     if (fclose(file) != 0) { // Attempt to close the file
         printf("Error closing the file.\n");
-        return 1;
+        free(data);
+        return NULL;
     }
-    return signature;
+
+    // Store the first 8 bytes as a char array
+    char *signatureFromExe = (char *)malloc(8 * 3 + 1); // Each byte represented by 2 characters + 1 space, plus 1 for null terminator
+    if (signatureFromExe == NULL) {
+        printf("Memory allocation failed.\n");
+        free(data);
+        return NULL;
+    }
+
+    for (int i = 0; i < 8; ++i) {
+        sprintf(&signatureFromExe[i * 3], "%02X ", data[i]);
+    }
+
+    free(data);
+    return signatureFromExe;
 }
+
 
 
 // Function to check for the presence of an MZ header in a file
 int checkMZHeader(const char *filename) {
+    if(filename == NULL) {
+        return 1;
+    }
+
     FILE *file = fopen(filename, "rb");
     if (file == NULL) {
         perror("Error opening file");
-        return -1; // Return -1 to indicate error
+        return -1;
     }
 
     // Read the first two bytes of the file
@@ -278,12 +270,12 @@ int checkMZHeader(const char *filename) {
     if (fread(header, 1, 2, file) != 2) {
         printf("Error reading file.\n");
         fclose(file);
-        return -1; // Return -1 to indicate error
+        return -2;
     }
 
     if (fclose(file) != 0) { // Attempt to close the file
         printf("Error closing the file.\n");
-        return 1;
+        return -3;
     }
 
     // Check for MZ header (ASCII characters 'M' (0x4D) followed by 'Z' (0x5A))
@@ -334,101 +326,107 @@ int prepareSignatureVerification(const char *filepathToScan, const char *offset,
     if (filepathToScan == NULL){
         return 1;
     }
-    if ( offset == NULL){
+    if (offset == NULL){
         return 2;
     }
-    if ( signature == NULL){
+    if (signature == NULL){
         return 3;
     }
+
+    // Convert offset to numeric value
     long offsetValue = strtol(offset, NULL, 16);
+    if (offsetValue == 0 && errno != 0) {
+        return 4; // Error converting offset to numeric value
+    }
+
+    // Calculate sizes
     long exe_size = calculateExeSize(filepathToScan);
+    if (exe_size < 0) {
+        return 5; // Error calculating exe size
+    }
+
     unsigned long long int offsetSize = offsetValue;
     size_t offset_size = calculateOffsetSize(offsetSize);
+    if (offset_size == 0) {
+        return 6; // Error calculating offset size
+    }
+
     size_t signature_size = calculateSignatureSize(signature);
+    if (signature_size == 0) {
+        return 7; // Error calculating signature size
+    }
+
+    // Check file integrity
     long result = check_file_size(exe_size, offset_size, signature_size);
-    return result;
+    if (result != 0) {
+        return 8; // File integrity check failed
+    }
+
+    return 0; // Success
 }
 
-
 int main() {
-    char SignatureTxt[MAX_SIGNATURE_LENGTH + 1];//signture from text file
-    char filepath[MAX_LENGTH]; // Adjusted buffer size
-    char filepathToScan[MAX_LENGTH]; // Adjusted buffer size
-    char NameFile[MAX_LENGTH]; // Adjusted buffer size // from the text file
-    char offset[MAX_LENGTH]; //offset from text file
-    unsigned int SignatureExe;
-    char hexSignature[MAX_SIGNATURE_LENGTH + 1];
-    char *ScanCheck;
+    char SignatureTxt[MAX_SIGNATURE_LENGTH + 1]; // Signature from text file
+    char filepath[MAX_LENGTH]; // File path for the signature file
+    char filepathToScan[MAX_LENGTH]; // File path for the executable
+    char NameFile[MAX_LENGTH]; // Name of the file (from the text file)
+    char offset[MAX_LENGTH]; // Offset from text file
+    char *signatureFromExe; // Signature from executable
     int CheackPrint;
+    char *ScanCheck;
+    char Signatureaxe[MAX_SIGNATURE_LENGTH + 1]; // Signature from text file
+
 
     // Prompt the user to input the file path for the signature file
-
-    CheackPrint =printf("Please enter the path of the file containing the hexadecimal signature: ");
-    if (CheackPrint<0)
-    {
-        printf("error of printing\n");
-        return -1;
+    CheackPrint = printf("Please enter the path of the file containing the hexadecimal signature: ");
+    if (CheackPrint < 0) {
+        printf("Error printing.\n");
+        return 1;
     }
-    ScanCheck = fgets(filepath, sizeof(filepath), stdin);
-    if (ScanCheck == NULL) {
-        printf("Error: Unable to read user input.\n");
-        return -1;
-    }
+    fgets(filepath, sizeof(filepath), stdin);
     filepath[strcspn(filepath, "\n")] = 0; // Remove trailing newline
 
     // Prompt the user to input the file path for the executable
-
-     CheackPrint = printf("Please enter the path of the Program: ");
-    if (CheackPrint<0)
-    {
-        printf("error of printing\n");
-        return -1;
+    CheackPrint = printf("Please enter the path of the executable: ");
+    if (CheackPrint < 0) {
+        printf("Error printing.\n");
+        return 1;
     }
-
-    ScanCheck = fgets(filepathToScan, sizeof(filepathToScan), stdin);
-    if (ScanCheck == NULL) {
-        printf("Error: Unable to read user input.\n");
-        return -1;
-    }
+    fgets(filepathToScan, sizeof(filepathToScan), stdin);
     filepathToScan[strcspn(filepathToScan, "\n")] = 0; // Remove trailing newline
 
-    // Call the function to read the signature and offset from the file
-    read_signature_and_offset(filepath,  SignatureTxt, offset, NameFile);
-
+    // Read the signature and offset from the file
+    if (read_signature_and_offset(filepath, SignatureTxt, offset, NameFile) != 0) {
+        return -2;
+    }
     // Check for MZ header in the executable file
     if (checkMZHeader(filepathToScan) != 1) {
-        printf("Error: Not a valid Windows executable.\n");
-        return -1;
+        return -3;
     }
 
-    // Convert the hexadecimal offset to a long value
+    // Print the signature from the text file
+    printf("Signature from text file: %s\n", SignatureTxt);
+
+    // Convert offset to numeric value
     long offsetValue = strtol(offset, NULL, 16);
-
-    // size cheacking
-    prepareSignatureVerification(filepathToScan, offset, SignatureTxt);
-
-    // Read data from the file at the specified offset
-    SignatureExe = read_file_at_offset(filepathToScan, offsetValue);
-
-    // Convert the unsigned int signature to a string representation
-    sprintf(hexSignature, "%X", SignatureExe);
-
-    // Compare the signatures
-    if (compareSignatures(hexSignature, SignatureTxt)) {
-        CheackPrint =printf("\nSignatures found in: %s\n", NameFile);
-        if (CheackPrint<0)
-        {
-            printf("error of printing\n");
-            return -1;
-        }
-
-    } else {
-        CheackPrint =printf("Signatures do not match!\n");
-        if (CheackPrint<0)
-        {
-            printf("error of printing\n");
-            return -1;
-        }
+    if (offsetValue == 0 && errno != 0) {
+        printf("Error converting offset to numeric value.\n");
+        return 1;
     }
+
+    // Read signature from the executable at the specified offset
+    signatureFromExe = read_signature_from_exe(filepathToScan, offsetValue);
+    if (signatureFromExe == NULL) {
+        printf("Error reading signature from executable.\n");
+        return 1;
+    }
+
+    // Print the signature from the executable
+    printf("Signature from executable: %s\n", signatureFromExe);
+    Signatureaxe = *signatureFromExe;
+
+    // Free allocated memory
+    free(signatureFromExe);
+
     return 0;
 }
