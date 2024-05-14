@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdbool.h>
 
 #define MAX_SIGNATURE_LENGTH 8
 #define MAX_LENGTH 100
@@ -116,8 +117,13 @@ long calculateExeSize(const char *file_path) {
     }
 
     // Seek to the end of the file to get its size
-    fseek(file, 0, SEEK_END);
-    long file_size = ftell(file);
+    if (fseek(file, 0, SEEK_END) != 0) {
+        return -2;
+    }
+    long file_size;
+    if ((file_size = ftell(file)) == -1L) {
+        return -3;
+    }
 
     // Close the file
     if (fclose(file) != 0) { // Attempt to close the file
@@ -210,30 +216,39 @@ char *read_signature_from_exe(const char *file_path, long offset) {
     // Seek to the specified offset
     if (fseek(file, offset, SEEK_SET) != 0) {
         printf("Error seeking to offset.\n");
-        fclose(file);
-        return NULL;
+        if (fclose(file) != 0) { // Attempt to close the file
+            printf("Error closing the file.\n");
+            exit(-1);
+        }
+        exit(-2);
     }
 
     // Read 8 bytes (64 bits) from the file
     unsigned char *data = (unsigned char *)malloc(8);
     if (data == NULL) {
         printf("Memory allocation failed.\n");
-        fclose(file);
-        return NULL;
+        if (fclose(file) != 0) { // Attempt to close the file
+            printf("Error closing the file.\n");
+            exit(-2);
+        }
+        exit(-3);
     }
 
     size_t bytes_read = fread(data, 1, 8, file);
     if (bytes_read != 8) {
         printf("Error reading signature from file.\n");
-        fclose(file);
+        if (fclose(file) != 0) { // Attempt to close the file
+            printf("Error closing the file.\n");
+            exit(-3);
+        }
         free(data);
-        return NULL;
+        exit(-4);
     }
 
     if (fclose(file) != 0) { // Attempt to close the file
         printf("Error closing the file.\n");
         free(data);
-        return NULL;
+        exit(-5);
     }
 
     // Store the first 8 bytes as a char array
@@ -241,17 +256,20 @@ char *read_signature_from_exe(const char *file_path, long offset) {
     if (signatureFromExe == NULL) {
         printf("Memory allocation failed.\n");
         free(data);
-        return NULL;
+        exit(3);
     }
 
     for (int i = 0; i < 8; ++i) {
-        sprintf(&signatureFromExe[i * 3], "%02X ", data[i]);
+        int chars_written = sprintf(&signatureFromExe[i * 3], "%02X ", data[i]);
+        if (chars_written < 0) {
+            printf("Error occurred during sprintf.\n");
+            exit(-6);
+        }
     }
 
     free(data);
     return signatureFromExe;
 }
-
 
 
 // Function to check for the presence of an MZ header in a file
@@ -263,20 +281,22 @@ int checkMZHeader(const char *filename) {
     FILE *file = fopen(filename, "rb");
     if (file == NULL) {
         perror("Error opening file");
-        return -1;
+        return 2;
     }
 
     // Read the first two bytes of the file
     unsigned char header[2];
     if (fread(header, 1, 2, file) != 2) {
         printf("Error reading file.\n");
-        fclose(file);
-        return -2;
+        if (fclose(file) != 0) { // Attempt to close the file
+            printf("Error closing the file.\n");
+            return -1;
+        }
     }
 
     if (fclose(file) != 0) { // Attempt to close the file
         printf("Error closing the file.\n");
-        return -3;
+        return -2;
     }
 
     // Check for MZ header (ASCII characters 'M' (0x4D) followed by 'Z' (0x5A))
@@ -341,6 +361,9 @@ char* removeWhitespace(const char* str) {
     }
     // Allocate memory for the new string
     size_t len = strlen(str);
+    if (len == 0){
+        exit(-1);
+    }
     char* result = (char*)malloc(len + 1); // +1 for null terminator
     if (result == NULL) {
         printf("Memory allocation failed.\n");
@@ -384,8 +407,8 @@ int main() {
     char NameFile[MAX_LENGTH]; // Name of the file (from the text file)
     char offset[MAX_LENGTH]; // Offset from text file
     char *signatureFromExe; // Signature from executable
-    int CheackPrint;
-    char *ScanCheck;
+    int CheackPrint;// a variable for checking the printf
+    char *ScanCheck;//A variable for cheking the scanf
     char Signatureaxe[MAX_SIGNATURE_LENGTH + 1]; // Signature from text file
 
 
@@ -477,7 +500,8 @@ int main() {
     }
 
     if (signaturesMatch) {
-        CheackPrint = printf("%s is safe!",NameFile);
+        NameFile[strcspn(NameFile, "\n")] = '\0';
+        CheackPrint = printf("%s is safe!\n",NameFile);
         if (CheackPrint < 0) {
             printf("Error printing.\n");
             return 6;
