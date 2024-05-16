@@ -112,23 +112,23 @@ long calculateExeSize(const char *file_path) {
         if (CheackPrint<0)
         {
             printf("error of printing\n");
-            return -1;
+            return 2;
         }
     }
 
     // Seek to the end of the file to get its size
     if (fseek(file, 0, SEEK_END) != 0) {
-        return -2;
+        return 3;
     }
     long file_size;
-    if ((file_size = ftell(file)) == -1L) {
-        return -3;
+    if ((file_size = ftell(file)) == -1) {
+        return 4;
     }
 
     // Close the file
     if (fclose(file) != 0) { // Attempt to close the file
         printf("Error closing the file.\n");
-        return -2;
+        return 5;
     }
     return file_size;
 }
@@ -167,7 +167,7 @@ int check_file_size(int exe_file_size, int offset, int signature_size) {
             printf("error of printing\n");
             return -1;
         }
-        exit(1) ;
+        return 1;
     }
     if (offset < 0) {
 
@@ -187,7 +187,7 @@ int check_file_size(int exe_file_size, int offset, int signature_size) {
             printf("error of printing\n");
             return -3;
         }
-        exit(3) ;
+        return 3;
     }
     if (exe_file_size < offset + signature_size) {
 
@@ -197,38 +197,78 @@ int check_file_size(int exe_file_size, int offset, int signature_size) {
             printf("error of printing\n");
             return -4;
         }
-        exit(4) ;
+        return 4;
     }
     return 0;
 }
-char read_signature_from_exe(const char *file_path, long offset) {
-    if(file_path == NULL) {
-        printf("The first argument is NULL\n");
-        return 1;
-    }
 
+char *read_signature_from_exe(const char *file_path, long offset) {
+    if(file_path == NULL) {
+        printf("The first argument is NULL");
+        exit(1);
+    }
     FILE *file = fopen(file_path, "rb");
     if (file == NULL) {
         printf("Unable to open file '%s'.\n", file_path);
-        return 2;
+        exit(2);
     }
 
+    // Seek to the specified offset
     if (fseek(file, offset, SEEK_SET) != 0) {
         printf("Error seeking to offset.\n");
-        fclose(file);
-        return 3;
+        if (fclose(file) != 0) { // Attempt to close the file
+            printf("Error closing the file.\n");
+            exit(-1);
+        }
+        exit(3);
     }
 
-    unsigned char data;
-    size_t bytes_read = fread(&data, 1, 1, file);
-    if (bytes_read != 1) {
+    // Read 8 bytes (64 bits) from the file
+    unsigned char *data = (unsigned char *)malloc(8);
+    if (data == NULL) {
+        printf("Memory allocation failed.\n");
+        if (fclose(file) != 0) { // Attempt to close the file
+            printf("Error closing the file.\n");
+            exit(-2);
+        }
+        exit(4);
+    }
+
+    size_t bytes_read = fread(data, 1, 8, file);
+    if (bytes_read != 8) {
         printf("Error reading signature from file.\n");
-        fclose(file);
-        return 4;
+        if (fclose(file) != 0) { // Attempt to close the file
+            printf("Error closing the file.\n");
+            exit(-3);
+        }
+        free(data);
+        exit(5);
     }
 
-    fclose(file);
-    return data;
+    if (fclose(file) != 0) { // Attempt to close the file
+        printf("Error closing the file.\n");
+        free(data);
+        exit(6);
+    }
+
+    // Store the first 8 bytes as a char array
+    char *signatureFromExe = (char *)malloc(8 * 3 + 1); // Each byte represented by 2 characters + 1 space, plus 1 for null terminator
+    if (signatureFromExe == NULL) {
+        printf("Memory allocation failed.\n");
+        free(data);
+        exit(7);
+    }
+
+    for (int i = 0; i < 8; ++i) {
+        int chars_written = sprintf(&signatureFromExe[i * 3], "%02X ", data[i]);
+        if (chars_written < 0) {
+            printf("Error occurred during sprintf.\n");
+            exit(8);
+        }
+    }
+
+    free(data);
+    return signatureFromExe;
 }
 
 
@@ -250,13 +290,13 @@ int checkMZHeader(const char *filename) {
         printf("Error reading file.\n");
         if (fclose(file) != 0) { // Attempt to close the file
             printf("Error closing the file.\n");
-            return -1;
+            return 3;
         }
     }
 
     if (fclose(file) != 0) { // Attempt to close the file
         printf("Error closing the file.\n");
-        return -2;
+        return 4;
     }
 
     // Check for MZ header (ASCII characters 'M' (0x4D) followed by 'Z' (0x5A))
@@ -365,10 +405,11 @@ int main() {
     char filepathToScan[MAX_LENGTH]; // File path for the executable
     char NameFile[MAX_LENGTH]; // Name of the file (from the text file)
     char offset[MAX_LENGTH]; // Offset from text file
-    char signatureFromExe; // Signature from executable
+    char *signatureFromExe; // Signature from executable
     int CheackPrint;// a variable for checking the printf
     char *ScanCheck;//A variable for cheking the scanf
     char Signatureaxe[MAX_SIGNATURE_LENGTH + 1]; // Signature from text file
+
 
     // Prompt the user to input the file path for the signature file
     CheackPrint = printf("\n** Hello,Welcome to the signature scaner ** \n\n             *** Guide of use *** \n * Prepare the text file as this examples * \n First line:Signature in HexDecimale and in 8 bytes with Spaces. \n Second line:offset in HexDecimale and write in 4 bytes.  \n Third line : Name of Program. \n\n******Examples of text file ******\n8D45D048FF15BDB4\n"
@@ -408,6 +449,7 @@ int main() {
         return 6;
     }
 
+
     // Convert offset to numeric value
     long offsetValue = strtol(offset, NULL, 16);
     if (offsetValue == 0 && errno != 0) {
@@ -437,7 +479,8 @@ int main() {
         return 9;
     }
 
-    strcpy(Signatureaxe, &signatureFromExe);
+
+    strcpy(Signatureaxe, signatureFromExe);
     if (strlen(Signatureaxe) == 0) {
         CheackPrint = printf("Error: strcpy failed to copy the signature.\n");
         if (CheackPrint < 0) {
@@ -451,6 +494,8 @@ int main() {
         return 11;
     }
 
+    // Free allocated memory
+    free(signatureFromExe);
     bool signaturesMatch = compareSignatures(SignatureTxt, strippedStr, SIGNATURE_SIZE);
     // size cheacking
     if (signaturesMatch != 0 && signaturesMatch !=1)  {
